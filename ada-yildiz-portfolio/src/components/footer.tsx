@@ -16,7 +16,7 @@ export default function Footer() {
             <Twitter size={20} />
           </a>
           <a
-            href="https://instagram.com/yourhandle"
+            href="https://www.instagram.com/adacan_yildiz/"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-pink-400 transition-colors"
@@ -24,7 +24,7 @@ export default function Footer() {
             <Instagram size={20} />
           </a>
           <a
-            href="https://github.com/yourhandle"
+            href="https://github.com/adayildizz"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-gray-100 transition-colors"
@@ -32,7 +32,7 @@ export default function Footer() {
             <Github size={20} />
           </a>
           <a
-            href="https://linkedin.com/in/yourhandle"
+            href="https://www.linkedin.com/in/ada-y%C4%B1ld%C4%B1z-a5953323b/"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-blue-400 transition-colors"

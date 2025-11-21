@@ -4,58 +4,52 @@ export default function Projects() {
   const projects = [
     {
       id: 1,
-      title: "E-Commerce Platform",
+      title: "RAM – Random Access Melodies",
       description:
-        "A full-stack e-commerce application built with Next.js, featuring user authentication, product management, and payment integration.",
-      technologies: [
-        "Next.js",
-        "TypeScript",
-        "Tailwind CSS",
-        "Stripe",
-        "MongoDB",
-      ],
-      image: "/project1.jpg",
-      github: "https://github.com/username/ecommerce",
-      live: "https://ecommerce-demo.com",
+        "A real‑time, prompt‑based music streaming site powered by an experimental music generation model and Llama‑3 for chatbot interactions. Awarded 4th place in the Stellar Rise‑in Web3 Hackathon and currently expanding with grant funding.",
+      technologies: ["GenAI", "Music Generation", "Llama‑3", "Web3"],
+      image: "/project-ram.jpg",
+      github: "https://github.com/adayildizz/ram", // replace if repo exists
+      live: "#",
       featured: true,
     },
     {
       id: 2,
-      title: "Task Management App",
+      title: "Interactive Building Simulation (C++ / OpenGL)",
       description:
-        "A collaborative task management application with real-time updates, drag-and-drop functionality, and team collaboration features.",
-      technologies: ["React", "Node.js", "Socket.io", "PostgreSQL", "Redis"],
-      image: "/project2.jpg",
-      github: "https://github.com/username/task-manager",
-      live: "https://task-manager-demo.com",
+        "A desktop-scale simulation built in modern C++ with pure OpenGL (no engine). Features an object placement system (grid/snapping and basic collision checks), dynamic shadow mapping, and a water surface with reflections/refractions and wave animation.",
+      technologies: [
+        "C++",
+        "OpenGL",
+        "Shadow Mapping",
+        "Water Rendering",
+        "Object Placement",
+      ],
+      image: "/project-opengl-building.jpg",
+      github: "https://github.com/adayildizz/opengl-building-sim", // replace if repo exists
+      live: "#",
       featured: false,
     },
     {
       id: 3,
-      title: "Weather Dashboard",
+      title: "Top‑down Web3 Game (OP_HACK001)",
       description:
-        "A weather application that displays current weather conditions and forecasts using multiple weather APIs with beautiful visualizations.",
-      technologies: ["Vue.js", "Chart.js", "OpenWeather API", "CSS3", "Vite"],
-      image: "/project3.jpg",
-      github: "https://github.com/username/weather-app",
-      live: "https://weather-dashboard.com",
-      featured: false,
+        "Developed within 2 months using Godot Engine. Features random level generation, NPC movement logic, and integration with the BitBoy platform for Bitcoin‑related games. Learned rapid prototyping, gameplay balancing, and user testing.",
+      technologies: ["Godot", "Procedural Generation", "Game Design"],
+      image: "/project-op_hack001.jpg",
+      github: "https://github.com/adayildizz/op_hack001", // replace if repo exists
+      live: "#",
+      featured: true,
     },
     {
       id: 4,
-      title: "Portfolio Website",
+      title: "3D Model Showcase & Blog Website",
       description:
-        "A modern, responsive portfolio website built with Next.js and Tailwind CSS, featuring smooth animations and dark mode.",
-      technologies: [
-        "Next.js",
-        "TypeScript",
-        "Tailwind CSS",
-        "Framer Motion",
-        "Vercel",
-      ],
-      image: "/project4.jpg",
-      github: "https://github.com/username/portfolio",
-      live: "https://portfolio-demo.com",
+        "An interactive platform for enthusiasts of 3D modeling and graphics. Includes blog and post sections for sharing insights. Built with React, TypeScript, Three.js, and WebGL.",
+      technologies: ["React", "TypeScript", "Three.js", "WebGL"],
+      image: "/project-3dshowcase.jpg",
+      github: "https://github.com/adayildizz/3d-showcase", // replace if repo exists
+      live: "#",
       featured: false,
     },
   ];
@@ -70,9 +64,9 @@ export default function Projects() {
               My Projects
             </h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Here are some of the projects I've worked on. Each one represents
-              a unique challenge and an opportunity to learn and grow as a
-              developer.
+              A selection of projects that reflect my interest in AI, computer
+              graphics, and interactive media. Each one challenged me to explore
+              new tools, learn quickly, and deliver something functional.
             </p>
           </div>
         </div>
@@ -131,14 +125,6 @@ export default function Projects() {
                       className="flex-1 bg-gray-800/50 hover:bg-gray-700/50 text-white text-center py-2 px-4 rounded-lg border border-gray-700/50 hover:border-gray-600/50 transition-all duration-200 text-sm"
                     >
                       GitHub
-                    </a>
-                    <a
-                      href={project.live}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 bg-teal-600/20 hover:bg-teal-600/30 text-teal-400 text-center py-2 px-4 rounded-lg border border-teal-500/30 hover:border-teal-500/50 transition-all duration-200 text-sm"
-                    >
-                      Live Demo
                     </a>
                   </div>
                 </div>

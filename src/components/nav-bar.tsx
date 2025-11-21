@@ -49,12 +49,12 @@ const NavBar: React.FC<NavBarProps> = ({ showNav }) => {
         >
           Projects
         </Link>
-        <Link
+        {/*<Link
           href="/models"
           className="flex-1 min-w-[90px] max-w-[160px] text-center px-2 py-2 sm:px-3 sm:py-2 rounded-lg text-gray-200 hover:text-teal-400 font-medium transition-colors duration-200 bg-gray-800/60 hover:bg-gray-700/80"
         >
           Models
-        </Link>
+        </Link>*/}
         <Link
           href="/notes"
           className="flex-1 min-w-[90px] max-w-[160px] text-center px-2 py-2 sm:px-3 sm:py-2 rounded-lg text-gray-200 hover:text-teal-400 font-medium transition-colors duration-200 bg-gray-800/60 hover:bg-gray-700/80"

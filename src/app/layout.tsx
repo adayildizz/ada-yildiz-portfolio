@@ -18,6 +18,11 @@ export const metadata: Metadata = {
   title: "Ada Yildiz - Portfolio",
   description:
     "Full Stack Developer and AI Researcher. Explore my projects, research, and insights in web development and machine learning.",
+  icons: {
+    icon: "/ada.jpeg", // Your photo as favicon
+    shortcut: "/ada.jpeg",
+    apple: "/ada.jpeg",
+  },
 };
 
 export default function RootLayout({

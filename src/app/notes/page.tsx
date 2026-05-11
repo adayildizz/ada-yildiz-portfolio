@@ -5,527 +5,550 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import {
-  Plus,
-  Search,
-  Tag,
-  Calendar,
-  Lock,
-  Unlock,
-  Edit2,
-  Trash2,
-  X,
-  Save,
-} from "lucide-react";
 
 interface Note {
   id: string;
   title: string;
   content: string;
   tags: string[];
-  isPublic: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
+const STORAGE_KEY = "technicalNotes";
+
+function formatDate(iso: string) {
+  return new Date(iso).toISOString().slice(0, 10);
+}
+
 export default function Notes() {
   const [notes, setNotes] = useState<Note[]>([]);
-  const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [filtered, setFiltered] = useState<Note[]>([]);
+  const [query, setQuery] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [showPrivateNotes, setShowPrivateNotes] = useState(true);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editing, setEditing] = useState<Note | null>(null);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [tags, setTags] = useState("");
+  const [preview, setPreview] = useState(false);
 
-  // Editor state
-  const [editingNote, setEditingNote] = useState<Note | null>(null);
-  const [editorTitle, setEditorTitle] = useState("");
-  const [editorContent, setEditorContent] = useState("");
-  const [editorTags, setEditorTags] = useState("");
-  const [editorIsPublic, setEditorIsPublic] = useState(false);
-  const [isPreview, setIsPreview] = useState(false);
-
-  // Load notes from localStorage on mount
   useEffect(() => {
-    const savedNotes = localStorage.getItem("technicalNotes");
-    if (savedNotes) {
-      const parsed = JSON.parse(savedNotes);
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
       setNotes(parsed);
-      setFilteredNotes(parsed);
+      setFiltered(parsed);
     }
   }, []);
 
-  // Filter notes based on search and tags
   useEffect(() => {
-    let filtered = notes;
-
-    // Filter by privacy
-    if (!showPrivateNotes) {
-      filtered = filtered.filter((note) => note.isPublic);
-    }
-
-    // Filter by search query
-    if (searchQuery) {
-      filtered = filtered.filter(
-        (note) =>
-          note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          note.tags.some((tag) =>
-            tag.toLowerCase().includes(searchQuery.toLowerCase())
-          )
+    let result = notes;
+    if (query) {
+      result = result.filter(
+        (n) =>
+          n.title.toLowerCase().includes(query.toLowerCase()) ||
+          n.content.toLowerCase().includes(query.toLowerCase()) ||
+          n.tags.some((t) => t.toLowerCase().includes(query.toLowerCase()))
       );
     }
-
-    // Filter by selected tag
     if (selectedTag) {
-      filtered = filtered.filter((note) => note.tags.includes(selectedTag));
+      result = result.filter((n) => n.tags.includes(selectedTag));
     }
+    setFiltered(result);
+  }, [notes, query, selectedTag]);
 
-    setFilteredNotes(filtered);
-  }, [notes, searchQuery, selectedTag, showPrivateNotes]);
+  const allTags = Array.from(new Set(notes.flatMap((n) => n.tags)));
 
-  // Get all unique tags
-  const allTags = Array.from(new Set(notes.flatMap((note) => note.tags)));
-
-  // Save notes to localStorage
-  const saveToStorage = (updatedNotes: Note[]) => {
-    localStorage.setItem("technicalNotes", JSON.stringify(updatedNotes));
-    setNotes(updatedNotes);
+  const save = (updated: Note[]) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    setNotes(updated);
   };
 
-  // Open editor for new note
-  const openNewNote = () => {
-    setEditingNote(null);
-    setEditorTitle("");
-    setEditorContent("");
-    setEditorTags("");
-    setEditorIsPublic(false);
-    setIsPreview(false);
-    setIsEditorOpen(true);
+  const openNew = () => {
+    setEditing(null);
+    setTitle("");
+    setContent("");
+    setTags("");
+    setPreview(false);
+    setEditorOpen(true);
   };
 
-  // Open editor for existing note
-  const openEditNote = (note: Note) => {
-    setEditingNote(note);
-    setEditorTitle(note.title);
-    setEditorContent(note.content);
-    setEditorTags(note.tags.join(", "));
-    setEditorIsPublic(note.isPublic);
-    setIsPreview(false);
-    setIsEditorOpen(true);
+  const openEdit = (note: Note) => {
+    setEditing(note);
+    setTitle(note.title);
+    setContent(note.content);
+    setTags(note.tags.join(", "));
+    setPreview(false);
+    setEditorOpen(true);
   };
 
-  // Save note
   const saveNote = () => {
-    if (!editorTitle.trim() || !editorContent.trim()) {
-      alert("Title and content are required!");
-      return;
-    }
-
-    const tags = editorTags
+    if (!title.trim() || !content.trim()) return;
+    const parsedTags = tags
       .split(",")
-      .map((tag) => tag.trim())
-      .filter((tag) => tag.length > 0);
-
-    if (editingNote) {
-      // Update existing note
-      const updatedNotes = notes.map((note) =>
-        note.id === editingNote.id
-          ? {
-              ...note,
-              title: editorTitle,
-              content: editorContent,
-              tags,
-              isPublic: editorIsPublic,
-              updatedAt: new Date().toISOString(),
-            }
-          : note
+      .map((t) => t.trim())
+      .filter(Boolean);
+    if (editing) {
+      save(
+        notes.map((n) =>
+          n.id === editing.id
+            ? { ...n, title, content, tags: parsedTags, updatedAt: new Date().toISOString() }
+            : n
+        )
       );
-      saveToStorage(updatedNotes);
     } else {
-      // Create new note
-      const newNote: Note = {
-        id: Date.now().toString(),
-        title: editorTitle,
-        content: editorContent,
-        tags,
-        isPublic: editorIsPublic,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      saveToStorage([newNote, ...notes]);
+      save([
+        {
+          id: Date.now().toString(),
+          title,
+          content,
+          tags: parsedTags,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        ...notes,
+      ]);
     }
-
-    setIsEditorOpen(false);
+    setEditorOpen(false);
   };
 
-  // Delete note
   const deleteNote = (id: string) => {
-    if (confirm("Are you sure you want to delete this note?")) {
-      const updatedNotes = notes.filter((note) => note.id !== id);
-      saveToStorage(updatedNotes);
-    }
+    if (confirm("delete?")) save(notes.filter((n) => n.id !== id));
   };
 
-  // Toggle note privacy
-  const toggleNotePrivacy = (id: string) => {
-    const updatedNotes = notes.map((note) =>
-      note.id === id
-        ? {
-            ...note,
-            isPublic: !note.isPublic,
-            updatedAt: new Date().toISOString(),
-          }
-        : note
-    );
-    saveToStorage(updatedNotes);
+  const markdownComponents = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    code({ inline, className, children, ...props }: any) {
+      const match = /language-(\w+)/.exec(className || "");
+      return !inline && match ? (
+        <SyntaxHighlighter style={vscDarkPlus} language={match[1]} PreTag="div" {...props}>
+          {String(children).replace(/\n$/, "")}
+        </SyntaxHighlighter>
+      ) : (
+        <code className={className} {...props}>
+          {children}
+        </code>
+      );
+    },
   };
 
   return (
-    <main className="min-h-screen bg-black text-white pt-20">
-      {/* Hero Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8 border-b border-gray-800/50">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                <span className="bg-gradient-to-r from-stone-200 to-stone-100 bg-clip-text text-transparent">
-                  Technical Notes
-                </span>
-              </h1>
-              <p className="text-lg text-gray-400">
-                Daily learnings, experiments, and technical discoveries
-              </p>
-            </div>
-
-            <button
-              onClick={openNewNote}
-              className="flex items-center gap-2 px-6 py-3 bg-stone-200 text-black font-medium hover:bg-stone-100 transition-colors duration-300"
-            >
-              <Plus size={20} />
-              New Note
-            </button>
-          </div>
+    <main
+      style={{
+        position: "relative",
+        zIndex: 1,
+        minHeight: "100vh",
+        paddingTop: "8rem",
+        paddingBottom: "4rem",
+        paddingLeft: "clamp(1.5rem, 5vw, 4rem)",
+        paddingRight: "clamp(1.5rem, 5vw, 4rem)",
+        maxWidth: "900px",
+        margin: "0 auto",
+      }}
+    >
+      {/* Header */}
+      <header
+        style={{
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+          marginBottom: "3rem",
+          borderBottom: "1px solid var(--border)",
+          paddingBottom: "1.5rem",
+        }}
+      >
+        <div>
+          <p
+            style={{
+              fontSize: "0.7rem",
+              color: "var(--dim)",
+              letterSpacing: "0.1em",
+              marginBottom: "0.5rem",
+            }}
+          >
+            NOTES
+          </p>
+          <h1
+            style={{
+              fontSize: "clamp(1.25rem, 3vw, 1.75rem)",
+              fontWeight: 400,
+              color: "var(--text)",
+            }}
+          >
+            Lab notebook
+          </h1>
         </div>
-      </section>
+        <button
+          onClick={openNew}
+          style={{
+            fontSize: "0.75rem",
+            color: "var(--amber)",
+            background: "none",
+            border: "1px solid var(--amber)",
+            padding: "0.4rem 0.9rem",
+            cursor: "pointer",
+            letterSpacing: "0.05em",
+            fontFamily: "inherit",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "var(--amber)";
+            e.currentTarget.style.color = "var(--bg)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "none";
+            e.currentTarget.style.color = "var(--amber)";
+          }}
+        >
+          + new
+        </button>
+      </header>
 
-      {/* Filters and Search */}
-      <section className="py-8 px-4 sm:px-6 lg:px-8 border-b border-gray-800/50">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search Bar */}
-            <div className="flex-1 relative">
-              <Search
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500"
-                size={20}
-              />
-              <input
-                type="text"
-                placeholder="Search notes, tags, content..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-gray-900/50 border border-gray-800 text-white placeholder-gray-500 focus:outline-none focus:border-stone-200 transition-colors duration-300"
-              />
-            </div>
+      {/* Search + tags */}
+      <div style={{ marginBottom: "2rem" }}>
+        <input
+          type="text"
+          placeholder="search..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          style={{
+            width: "100%",
+            background: "none",
+            border: "none",
+            borderBottom: "1px solid var(--border)",
+            padding: "0.5rem 0",
+            color: "var(--text)",
+            fontSize: "0.8rem",
+            letterSpacing: "0.03em",
+            outline: "none",
+            marginBottom: "1rem",
+            fontFamily: "inherit",
+          }}
+        />
 
-            {/* Privacy Toggle */}
+        {allTags.length > 0 && (
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
             <button
-              onClick={() => setShowPrivateNotes(!showPrivateNotes)}
-              className={`flex items-center gap-2 px-6 py-3 border transition-all duration-300 ${
-                showPrivateNotes
-                  ? "border-gray-700 text-gray-300 hover:border-gray-600"
-                  : "border-stone-200 text-stone-200"
-              }`}
+              onClick={() => setSelectedTag(null)}
+              style={{
+                fontSize: "0.65rem",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: selectedTag === null ? "var(--amber)" : "var(--dim)",
+                padding: 0,
+                fontFamily: "inherit",
+                letterSpacing: "0.05em",
+              }}
             >
-              {showPrivateNotes ? <Unlock size={20} /> : <Lock size={20} />}
-              {showPrivateNotes ? "Show All" : "Public Only"}
+              all
             </button>
-          </div>
-
-          {/* Tags Filter */}
-          {allTags.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
+            {allTags.map((tag) => (
               <button
-                onClick={() => setSelectedTag(null)}
-                className={`px-4 py-2 text-sm border transition-colors duration-300 ${
-                  selectedTag === null
-                    ? "border-stone-200 text-stone-200"
-                    : "border-gray-700 text-gray-400 hover:border-gray-600"
-                }`}
+                key={tag}
+                onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
+                style={{
+                  fontSize: "0.65rem",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: selectedTag === tag ? "var(--amber)" : "var(--dim)",
+                  padding: 0,
+                  fontFamily: "inherit",
+                  letterSpacing: "0.05em",
+                }}
               >
-                All Tags
+                [{tag}]
               </button>
-              {allTags.map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() => setSelectedTag(tag)}
-                  className={`px-4 py-2 text-sm border transition-colors duration-300 ${
-                    selectedTag === tag
-                      ? "border-stone-200 text-stone-200"
-                      : "border-gray-700 text-gray-400 hover:border-gray-600"
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-          )}
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Notes list */}
+      {filtered.length === 0 ? (
+        <div
+          style={{
+            paddingTop: "4rem",
+            textAlign: "center",
+            color: "var(--dim)",
+            fontSize: "0.8rem",
+          }}
+        >
+          {notes.length === 0 ? "no entries yet." : "no results."}
         </div>
-      </section>
+      ) : (
+        <div>
+          {filtered.map((note) => {
+            const isExpanded = expanded === note.id;
+            return (
+              <article
+                key={note.id}
+                style={{
+                  borderBottom: "1px solid var(--border)",
+                  padding: "1.25rem 0",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "1rem",
+                    marginBottom: "0.25rem",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => setExpanded(isExpanded ? null : note.id)}
+                >
+                  <span style={{ fontSize: "0.65rem", color: "var(--dim)", flexShrink: 0 }}>
+                    {isExpanded ? "▾" : "▸"}
+                  </span>
+                  <h2
+                    style={{
+                      fontSize: "0.9rem",
+                      fontWeight: 500,
+                      color: "var(--text)",
+                      flex: 1,
+                    }}
+                  >
+                    {note.title}
+                  </h2>
+                  <span style={{ fontSize: "0.65rem", color: "var(--dim)", flexShrink: 0 }}>
+                    {formatDate(note.createdAt)}
+                  </span>
+                </div>
 
-      {/* Notes List */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          {filteredNotes.length === 0 ? (
-            <div className="text-center py-20">
-              <div className="text-6xl mb-6">📝</div>
-              <h3 className="text-2xl font-bold text-gray-400 mb-4">
-                {notes.length === 0 ? "No notes yet" : "No notes found"}
-              </h3>
-              <p className="text-gray-500 mb-8">
-                {notes.length === 0
-                  ? "Start documenting your learning journey"
-                  : "Try adjusting your search or filters"}
-              </p>
-              {notes.length === 0 && (
-                <button
-                  onClick={openNewNote}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-stone-200 text-black font-medium hover:bg-stone-100 transition-colors duration-300"
-                >
-                  <Plus size={20} />
-                  Create First Note
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {filteredNotes.map((note) => (
-                <article
-                  key={note.id}
-                  className="group bg-gray-900/30 border border-gray-800/50 hover:border-gray-700 transition-all duration-300 p-6"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-2xl font-bold text-white group-hover:text-stone-200 transition-colors duration-300">
-                          {note.title}
-                        </h3>
-                        {note.isPublic ? (
-                          <Unlock size={16} className="text-stone-200" />
-                        ) : (
-                          <Lock size={16} className="text-gray-500" />
-                        )}
-                      </div>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <Calendar size={14} />
-                          {new Date(note.createdAt).toLocaleDateString()}
-                        </span>
-                        {note.tags.length > 0 && (
-                          <div className="flex items-center gap-2">
-                            <Tag size={14} />
-                            {note.tags.map((tag) => (
-                              <span key={tag} className="text-stone-200">
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                {note.tags.length > 0 && (
+                  <div
+                    style={{
+                      paddingLeft: "1.5rem",
+                      display: "flex",
+                      gap: "0.5rem",
+                      marginBottom: isExpanded ? "1rem" : 0,
+                    }}
+                  >
+                    {note.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        style={{ fontSize: "0.6rem", color: "var(--amber)", letterSpacing: "0.05em" }}
+                      >
+                        [{tag}]
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {isExpanded && (
+                  <div style={{ paddingLeft: "1.5rem" }}>
+                    <div className="prose" style={{ marginBottom: "1rem" }}>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                        {note.content}
+                      </ReactMarkdown>
                     </div>
-
-                    <div className="flex items-center gap-2">
+                    <div style={{ display: "flex", gap: "1rem" }}>
                       <button
-                        onClick={() => toggleNotePrivacy(note.id)}
-                        className="p-2 text-gray-400 hover:text-stone-200 transition-colors duration-300"
-                        title={note.isPublic ? "Make Private" : "Make Public"}
+                        onClick={() => openEdit(note)}
+                        style={{
+                          fontSize: "0.65rem",
+                          color: "var(--dim)",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          padding: 0,
+                          fontFamily: "inherit",
+                          letterSpacing: "0.05em",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--dim)")}
                       >
-                        {note.isPublic ? (
-                          <Unlock size={18} />
-                        ) : (
-                          <Lock size={18} />
-                        )}
-                      </button>
-                      <button
-                        onClick={() => openEditNote(note)}
-                        className="p-2 text-gray-400 hover:text-stone-200 transition-colors duration-300"
-                        title="Edit"
-                      >
-                        <Edit2 size={18} />
+                        edit
                       </button>
                       <button
                         onClick={() => deleteNote(note.id)}
-                        className="p-2 text-gray-400 hover:text-red-400 transition-colors duration-300"
-                        title="Delete"
+                        style={{
+                          fontSize: "0.65rem",
+                          color: "var(--dim)",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          padding: 0,
+                          fontFamily: "inherit",
+                          letterSpacing: "0.05em",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = "#c0392b")}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--dim)")}
                       >
-                        <Trash2 size={18} />
+                        delete
                       </button>
                     </div>
                   </div>
-
-                  <div className="prose prose-invert prose-teal max-w-none">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        code({
-                          node,
-                          inline,
-                          className,
-                          children,
-                          ...props
-                        }: any) {
-                          const match = /language-(\w+)/.exec(className || "");
-                          return !inline && match ? (
-                            <SyntaxHighlighter
-                              style={vscDarkPlus}
-                              language={match[1]}
-                              PreTag="div"
-                              {...props}
-                            >
-                              {String(children).replace(/\n$/, "")}
-                            </SyntaxHighlighter>
-                          ) : (
-                            <code className={className} {...props}>
-                              {children}
-                            </code>
-                          );
-                        },
-                      }}
-                    >
-                      {note.content.length > 300
-                        ? note.content.substring(0, 300) + "..."
-                        : note.content}
-                    </ReactMarkdown>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
+                )}
+              </article>
+            );
+          })}
         </div>
-      </section>
+      )}
 
-      {/* Editor Modal */}
-      {isEditorOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-6xl h-[90vh] bg-gray-900 border border-gray-800 flex flex-col">
-            {/* Editor Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-800">
-              <h2 className="text-2xl font-bold text-white">
-                {editingNote ? "Edit Note" : "New Note"}
-              </h2>
-              <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2 text-gray-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={editorIsPublic}
-                    onChange={(e) => setEditorIsPublic(e.target.checked)}
-                    className="w-4 h-4"
-                  />
-                  {editorIsPublic ? (
-                    <>
-                      <Unlock size={18} className="text-stone-200" />
-                      <span>Public</span>
-                    </>
-                  ) : (
-                    <>
-                      <Lock size={18} className="text-gray-500" />
-                      <span>Private</span>
-                    </>
-                  )}
-                </label>
+      {/* Editor modal */}
+      {editorOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 100,
+            background: "rgba(10,10,10,0.95)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "2rem",
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "760px",
+              height: "85vh",
+              border: "1px solid var(--border)",
+              background: "var(--bg)",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "1rem 1.5rem",
+                borderBottom: "1px solid var(--border)",
+                fontSize: "0.75rem",
+                color: "var(--dim)",
+              }}
+            >
+              <span>{editing ? "edit entry" : "new entry"}</span>
+              <div style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
                 <button
-                  onClick={() => setIsPreview(!isPreview)}
-                  className="px-4 py-2 border border-gray-700 text-gray-300 hover:border-gray-600 transition-colors duration-300"
+                  onClick={() => setPreview(!preview)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: preview ? "var(--amber)" : "var(--dim)",
+                    fontSize: "0.7rem",
+                    fontFamily: "inherit",
+                    letterSpacing: "0.05em",
+                  }}
                 >
-                  {isPreview ? "Edit" : "Preview"}
+                  {preview ? "edit" : "preview"}
                 </button>
                 <button
                   onClick={saveNote}
-                  className="flex items-center gap-2 px-6 py-2 bg-stone-200 text-black font-medium hover:bg-stone-100 transition-colors duration-300"
+                  style={{
+                    background: "none",
+                    border: "1px solid var(--amber)",
+                    color: "var(--amber)",
+                    cursor: "pointer",
+                    fontSize: "0.7rem",
+                    fontFamily: "inherit",
+                    letterSpacing: "0.05em",
+                    padding: "0.3rem 0.75rem",
+                  }}
                 >
-                  <Save size={18} />
-                  Save
+                  save
                 </button>
                 <button
-                  onClick={() => setIsEditorOpen(false)}
-                  className="p-2 text-gray-400 hover:text-white transition-colors duration-300"
+                  onClick={() => setEditorOpen(false)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--dim)",
+                    cursor: "pointer",
+                    fontSize: "1rem",
+                    fontFamily: "inherit",
+                    lineHeight: 1,
+                  }}
                 >
-                  <X size={24} />
+                  ×
                 </button>
               </div>
             </div>
 
-            {/* Editor Body */}
-            <div className="flex-1 overflow-hidden">
-              {isPreview ? (
-                <div className="h-full overflow-y-auto p-6">
-                  <h1 className="text-4xl font-bold mb-6 text-white">
-                    {editorTitle || "Untitled"}
+            <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+              {preview ? (
+                <div style={{ flex: 1, overflowY: "auto", padding: "1.5rem" }}>
+                  <h1
+                    style={{
+                      fontSize: "1.25rem",
+                      fontWeight: 500,
+                      color: "var(--text)",
+                      marginBottom: "1.5rem",
+                    }}
+                  >
+                    {title || "untitled"}
                   </h1>
-                  <div className="prose prose-invert prose-teal max-w-none">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        code({
-                          node,
-                          inline,
-                          className,
-                          children,
-                          ...props
-                        }: any) {
-                          const match = /language-(\w+)/.exec(className || "");
-                          return !inline && match ? (
-                            <SyntaxHighlighter
-                              style={vscDarkPlus}
-                              language={match[1]}
-                              PreTag="div"
-                              {...props}
-                            >
-                              {String(children).replace(/\n$/, "")}
-                            </SyntaxHighlighter>
-                          ) : (
-                            <code className={className} {...props}>
-                              {children}
-                            </code>
-                          );
-                        },
-                      }}
-                    >
-                      {editorContent || "*No content yet*"}
+                  <div className="prose">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                      {content || "*empty*"}
                     </ReactMarkdown>
                   </div>
                 </div>
               ) : (
-                <div className="h-full flex flex-col p-6 gap-4">
+                <div
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    padding: "1.5rem",
+                    gap: "1rem",
+                  }}
+                >
                   <input
                     type="text"
-                    placeholder="Note title..."
-                    value={editorTitle}
-                    onChange={(e) => setEditorTitle(e.target.value)}
-                    className="text-3xl font-bold bg-transparent border-none text-white placeholder-gray-600 focus:outline-none"
+                    placeholder="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      borderBottom: "1px solid var(--border)",
+                      padding: "0.5rem 0",
+                      color: "var(--text)",
+                      fontSize: "1rem",
+                      fontFamily: "inherit",
+                      outline: "none",
+                    }}
                   />
                   <input
                     type="text"
-                    placeholder="Tags (comma separated): react, threejs, ai"
-                    value={editorTags}
-                    onChange={(e) => setEditorTags(e.target.value)}
-                    className="text-sm bg-transparent border border-gray-800 px-4 py-2 text-gray-300 placeholder-gray-600 focus:outline-none focus:border-stone-200 transition-colors duration-300"
+                    placeholder="tags: comma, separated"
+                    value={tags}
+                    onChange={(e) => setTags(e.target.value)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      borderBottom: "1px solid var(--border)",
+                      padding: "0.4rem 0",
+                      color: "var(--dim)",
+                      fontSize: "0.75rem",
+                      fontFamily: "inherit",
+                      outline: "none",
+                    }}
                   />
                   <textarea
-                    placeholder="Write your note in Markdown...
-
-Example:
-# Heading
-**bold** *italic* `code`
-
-```javascript
-const hello = 'world';
-```
-
-- List item
-- Another item"
-                    value={editorContent}
-                    onChange={(e) => setEditorContent(e.target.value)}
-                    className="flex-1 bg-transparent border border-gray-800 p-4 text-white placeholder-gray-600 focus:outline-none focus:border-stone-200 transition-colors duration-300 resize-none font-mono"
+                    placeholder="markdown..."
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    style={{
+                      flex: 1,
+                      background: "none",
+                      border: "none",
+                      color: "var(--text)",
+                      fontSize: "0.8rem",
+                      fontFamily: "inherit",
+                      resize: "none",
+                      outline: "none",
+                      lineHeight: 1.7,
+                    }}
                   />
                 </div>
               )}

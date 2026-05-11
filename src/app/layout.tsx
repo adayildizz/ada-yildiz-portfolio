@@ -12,7 +12,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: "Ada Yıldız",
-  description: "Computer Engineer. GPU systems, graphics, haptics,",
+  description: "Computer Engineer. GPU systems, graphics,",
   icons: {
     icon: "/ada.jpeg",
     shortcut: "/ada.jpeg",

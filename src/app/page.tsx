@@ -46,7 +46,7 @@ export default function Home() {
               letterSpacing: "0.05em",
             }}
           >
-            Computer Engineer. GPU systems, graphics, haptics,
+            Computer Engineer. GPU systems, graphics, ,
             <span className="cursor">_</span>
           </p>
         </div>

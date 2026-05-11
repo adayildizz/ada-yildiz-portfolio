@@ -5,47 +5,47 @@ import { useState, useEffect, useRef } from "react";
 const projects = [
   {
     id: "001",
+    title: "SPH Fluid Simulation",
+    year: "2024",
+    category: "Graphics",
+    problem:
+      "Screen-space rendering pipeline for real-time fluid simulation, implementing NVIDIA's position-based fluids paper.",
+    tech: ["C++", "OpenGL", "GLSL", "CUDA"],
+    note: null,
+    video: null,
+  },
+  {
+    id: "002",
+    title: "Interactive World Builder",
+    year: "2024",
+    category: "Graphics",
+    problem:
+      "Real-time terrain generation with water rendering and raycasting — a rendering engine built from scratch in OpenGL.",
+    tech: ["C++", "OpenGL", "GLSL"],
+    note: null,
+    video: null,
+  },
+  {
+    id: "003",
     title: "RAM — Random Access Melody",
     year: "2025",
     category: "AI × Music",
     problem:
-      "Continuous AI-generated music from text prompts, streamed without perceptible buffering latency.",
+      "Text prompt to continuous AI-generated audio stream, no buffering. Llama-3 for semantic parsing, experimental music model for real-time synthesis.",
     tech: ["GenAI", "Llama-3", "Web3"],
     note: "4th place, Stellar Rise-in Web3 Hackathon",
-    video: "/videos/ram.mp4",
-  },
-  {
-    id: "002",
-    title: "Interactive Building Simulation",
-    year: "2024",
-    category: "Graphics",
-    problem:
-      "Shadow mapping and real-time water reflections at interactive scale — pure OpenGL, no engine.",
-    tech: ["C++", "OpenGL", "GLSL"],
-    note: null,
-    video: "/videos/opengl.mp4",
-  },
-  {
-    id: "003",
-    title: "Top-down Web3 Game",
-    year: "2024",
-    category: "Game Dev",
-    problem:
-      "Procedural level generation with NPC pathfinding, shipped in 2 months for the BitBoy platform.",
-    tech: ["Godot", "GDScript", "Web3"],
-    note: null,
-    video: "/videos/game.mp4",
+    video: null,
   },
   {
     id: "004",
-    title: "3D Model Showcase",
+    title: "Electroactive Haptic Feedback",
     year: "2025",
-    category: "Web × 3D",
+    category: "Research × HCI",
     problem:
-      "Real-time WebGL model rendering in the browser, paired with a content system for sharing notes.",
-    tech: ["Three.js", "React", "TypeScript"],
-    note: null,
-    video: "/videos/3d.mp4",
+      "Translates visual data properties — bar height, color intensity, slice size — into electrical haptic signals via a VISA-compatible signal generator, in real time.",
+    tech: ["Python", "Pygame", "PyVISA"],
+    note: "Koç University RML Lab",
+    video: null,
   },
 ];
 
@@ -225,23 +225,38 @@ export default function Work() {
           transform: "translateY(-50%)",
           width: "clamp(200px, 22vw, 320px)",
           aspectRatio: "16/9",
-          opacity: visible && activeProject?.video ? 1 : 0,
+          opacity: hovered ? 1 : 0,
           transition: "opacity 0.4s ease",
           pointerEvents: "none",
           zIndex: 40,
           border: "1px solid var(--border)",
           background: "#0a0a0a",
           overflow: "hidden",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        <video
-          ref={videoRef}
-          src={activeProject?.video ?? undefined}
-          muted
-          loop
-          playsInline
-          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-        />
+        {activeProject?.video ? (
+          <video
+            ref={videoRef}
+            src={activeProject.video}
+            muted
+            loop
+            playsInline
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+          />
+        ) : (
+          <span
+            style={{
+              fontSize: "0.65rem",
+              color: "var(--dim)",
+              letterSpacing: "0.08em",
+            }}
+          >
+            no video yet
+          </span>
+        )}
       </div>
     </main>
   );

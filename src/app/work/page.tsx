@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const projects = [
   {
@@ -12,7 +12,7 @@ const projects = [
       "Continuous AI-generated music from text prompts, streamed without perceptible buffering latency.",
     tech: ["GenAI", "Llama-3", "Web3"],
     note: "4th place, Stellar Rise-in Web3 Hackathon",
-    href: null,
+    video: "/videos/ram.mp4",
   },
   {
     id: "002",
@@ -23,7 +23,7 @@ const projects = [
       "Shadow mapping and real-time water reflections at interactive scale — pure OpenGL, no engine.",
     tech: ["C++", "OpenGL", "GLSL"],
     note: null,
-    href: null,
+    video: "/videos/opengl.mp4",
   },
   {
     id: "003",
@@ -34,7 +34,7 @@ const projects = [
       "Procedural level generation with NPC pathfinding, shipped in 2 months for the BitBoy platform.",
     tech: ["Godot", "GDScript", "Web3"],
     note: null,
-    href: null,
+    video: "/videos/game.mp4",
   },
   {
     id: "004",
@@ -45,12 +45,40 @@ const projects = [
       "Real-time WebGL model rendering in the browser, paired with a content system for sharing notes.",
     tech: ["Three.js", "React", "TypeScript"],
     note: null,
-    href: null,
+    video: "/videos/3d.mp4",
   },
 ];
 
 export default function Work() {
   const [hovered, setHovered] = useState<string | null>(null);
+  const [visible, setVisible] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const activeProject = projects.find((p) => p.id === hovered);
+
+  useEffect(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (hovered && activeProject?.video) {
+      timerRef.current = setTimeout(() => setVisible(true), 80);
+    } else {
+      setVisible(false);
+    }
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [hovered, activeProject]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (visible && activeProject?.video) {
+      video.load();
+      video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  }, [visible, activeProject]);
 
   return (
     <main
@@ -98,19 +126,17 @@ export default function Work() {
               onMouseEnter={() => setHovered(project.id)}
               onMouseLeave={() => setHovered(null)}
               style={{
-                display: "block",
                 padding: "1.75rem 0",
                 borderBottom: "1px solid var(--border)",
                 borderLeft: isHovered
                   ? "2px solid var(--amber)"
                   : "2px solid transparent",
                 paddingLeft: isHovered ? "1rem" : "0",
-                textDecoration: "none",
                 cursor: "default",
                 transition: "border-color 0.2s ease, padding-left 0.2s ease",
               }}
             >
-              {/* Row 1: id + title + year */}
+              {/* id + title + year */}
               <div
                 style={{
                   display: "flex",
@@ -133,46 +159,33 @@ export default function Work() {
                   style={{
                     fontSize: "clamp(0.9rem, 2vw, 1.1rem)",
                     fontWeight: 500,
-                    color: isHovered ? "var(--text)" : "var(--text)",
+                    color: "var(--text)",
                     flex: 1,
-                    transition: "color 0.2s ease",
                   }}
                 >
                   {project.title}
                 </span>
-                <span
-                  style={{
-                    fontSize: "0.7rem",
-                    color: "var(--dim)",
-                    flexShrink: 0,
-                  }}
-                >
+                <span style={{ fontSize: "0.7rem", color: "var(--dim)", flexShrink: 0 }}>
                   {project.year}
                 </span>
               </div>
 
-              {/* Row 2: problem statement */}
+              {/* problem */}
               <div
                 style={{
                   paddingLeft: "2.5rem",
-                  marginBottom: isHovered ? "0.75rem" : "0",
                   overflow: "hidden",
                   maxHeight: isHovered ? "4rem" : "0",
+                  marginBottom: isHovered ? "0.75rem" : "0",
                   transition: "max-height 0.3s ease, margin-bottom 0.3s ease",
                 }}
               >
-                <p
-                  style={{
-                    fontSize: "0.8rem",
-                    color: "var(--dim)",
-                    lineHeight: 1.6,
-                  }}
-                >
+                <p style={{ fontSize: "0.8rem", color: "var(--dim)", lineHeight: 1.6 }}>
                   {project.problem}
                 </p>
               </div>
 
-              {/* Row 3: tech tags */}
+              {/* tags */}
               <div
                 style={{
                   paddingLeft: "2.5rem",
@@ -187,23 +200,13 @@ export default function Work() {
                 {project.tech.map((t) => (
                   <span
                     key={t}
-                    style={{
-                      fontSize: "0.65rem",
-                      color: "var(--amber)",
-                      letterSpacing: "0.05em",
-                    }}
+                    style={{ fontSize: "0.65rem", color: "var(--amber)", letterSpacing: "0.05em" }}
                   >
                     [{t}]
                   </span>
                 ))}
                 {project.note && (
-                  <span
-                    style={{
-                      fontSize: "0.65rem",
-                      color: "var(--dim)",
-                      letterSpacing: "0.03em",
-                    }}
-                  >
+                  <span style={{ fontSize: "0.65rem", color: "var(--dim)", letterSpacing: "0.03em" }}>
                     — {project.note}
                   </span>
                 )}
@@ -211,6 +214,34 @@ export default function Work() {
             </div>
           );
         })}
+      </div>
+
+      {/* Floating video — fixed right side */}
+      <div
+        style={{
+          position: "fixed",
+          right: "clamp(2rem, 5vw, 5rem)",
+          top: "50%",
+          transform: "translateY(-50%)",
+          width: "clamp(200px, 22vw, 320px)",
+          aspectRatio: "16/9",
+          opacity: visible && activeProject?.video ? 1 : 0,
+          transition: "opacity 0.4s ease",
+          pointerEvents: "none",
+          zIndex: 40,
+          border: "1px solid var(--border)",
+          background: "#0a0a0a",
+          overflow: "hidden",
+        }}
+      >
+        <video
+          ref={videoRef}
+          src={activeProject?.video ?? undefined}
+          muted
+          loop
+          playsInline
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        />
       </div>
     </main>
   );

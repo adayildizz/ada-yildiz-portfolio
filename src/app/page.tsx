@@ -46,7 +46,6 @@ export default function Home() {
               letterSpacing: "0.05em",
             }}
           >
-            {/* Replace this line with your bio */}
             Computer Engineer. GPU systems, graphics, haptics.
             <span className="cursor">_</span>
           </p>

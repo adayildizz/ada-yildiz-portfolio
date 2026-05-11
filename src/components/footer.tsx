@@ -44,7 +44,7 @@ export default function Footer() {
           onMouseEnter={(e) => (e.currentTarget.style.color = "var(--amber)")}
           onMouseLeave={(e) => (e.currentTarget.style.color = "var(--dim)")}
         >
-          adayildiz22@ku.edu.tr
+          e-mail
         </a>
       </div>
     </footer>

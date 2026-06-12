@@ -14,9 +14,7 @@ export const metadata: Metadata = {
   title: "Ada Yıldız",
   description: "Computer Engineer. GPU systems, graphics,",
   icons: {
-    icon: "/ada.jpeg",
-    shortcut: "/ada.jpeg",
-    apple: "/ada.jpeg",
+    icon: "/icon.svg",
   },
 };
 

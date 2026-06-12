@@ -23,7 +23,7 @@ const projects = [
       "Real-time terrain generation with water rendering and raycasting — a rendering engine built from scratch in OpenGL.",
     tech: ["C++", "OpenGL", "GLSL"],
     note: null,
-    video: null,
+    video: "/videos/buildingsimulationvideo.mp4",
   },
   {
     id: "003",

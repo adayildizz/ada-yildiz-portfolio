@@ -4,7 +4,7 @@
   --bg: #0a0a0a;
   --text: #e8e3d3;
   --dim: #6b6660;
-  --amber: #d4a843;
+  --amber: #2dd4b4;
   --border: rgba(232, 227, 211, 0.08);
 }
 
@@ -47,8 +47,8 @@ body::before {
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(var(--border) 1px, transparent 1px),
-    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    linear-gradient(rgba(45, 212, 180, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(45, 212, 180, 0.04) 1px, transparent 1px);
   background-size: 60px 60px;
   pointer-events: none;
   z-index: 0;

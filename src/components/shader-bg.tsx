@@ -58,11 +58,14 @@ const FRAG = `
 
     float f = fbm(uv + r);
 
-    vec3 bg = vec3(0.039, 0.039, 0.039);
-    vec3 amber = vec3(0.831, 0.659, 0.263);
+    vec3 bg    = vec3(0.035, 0.04, 0.08);
+    vec3 teal  = vec3(0.18, 0.82, 0.70);
+    vec3 pearl = vec3(0.75, 0.92, 0.95);
 
-    float intensity = clamp(f * 0.14 - 0.01, 0.0, 1.0);
-    vec3 color = mix(bg, amber, intensity);
+    float t1 = clamp(f * 0.18 - 0.01, 0.0, 1.0);
+    float t2 = clamp(f * f * 0.22, 0.0, 1.0);
+    vec3 color = mix(bg, teal, t1);
+    color = mix(color, pearl, t2 * 0.25);
 
     gl_FragColor = vec4(color, 1.0);
   }

@@ -25,7 +25,7 @@ const projects = [
   },
   {
     id: "003",
-    title: "RAM — Random Access Melody",
+    title: "RAM — Random Access Melodies",
     year: "2025",
     problem: "Real-time AI music streaming platform. Google Lyria model integrated via WebSocket streaming, Redis session management for concurrent requests. Text prompt to continuous audio, no buffering.",
     tech: ["GenAI", "Lyria", "WebSocket", "Redis"],
@@ -78,7 +78,7 @@ const experiences = [
     key: "genarion",
   },
   {
-    role: "Backend Dev. Intern",
+    role: "Full-Stack Dev. Intern",
     place: "Azerion Turkey",
     year: "Aug 2024 — Oct 2024",
     desc: "Contributed to the relaunch of the Game Distribution Platform — backend redevelopment and monetization API integration.",
@@ -245,7 +245,8 @@ export default function Home() {
               I build real-time 3D rendering engines, haptic interfaces, and distributed AI applications. Currently deepening expertise in GPU programming and neural rendering.
             </p>
             <p style={{ fontSize: "0.85rem", color: "var(--dim)", lineHeight: 1.85 }}>
-              Anatolian Scholar at Koç University — full tuition, housing, and stipend. Erasmus exchange at IT University of Copenhagen, 2025–2026.
+              Anatolian Scholar at Koç University.
+              Erasmus exchange at IT University of Copenhagen, 2025–2026.
             </p>
           </div>
         </Section>

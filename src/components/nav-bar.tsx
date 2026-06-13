@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 
 const links = [
@@ -42,86 +42,131 @@ const socials = [
 
 export default function NavBar() {
   const [photoHovered, setPhotoHovered] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  useEffect(() => {
+    const dismiss = () => setPhotoHovered(false);
+    window.addEventListener("scroll", dismiss, { passive: true });
+    window.addEventListener("click", dismiss);
+    window.addEventListener("touchstart", dismiss, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", dismiss);
+      window.removeEventListener("click", dismiss);
+      window.removeEventListener("touchstart", dismiss);
+    };
+  }, []);
 
   return (
-    <nav
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 50,
+    <>
+      <nav style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
         padding: "1.5rem 2rem",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-      }}
-    >
-      {/* AY + hover photo */}
-      <div style={{ position: "relative" }}>
-        <a
-          href="#home"
-          style={{ color: "var(--text)", fontSize: "0.875rem", letterSpacing: "0.05em", textDecoration: "none", display: "block" }}
-          onMouseEnter={() => setPhotoHovered(true)}
-          onMouseLeave={() => setPhotoHovered(false)}
-        >
-          AY
-        </a>
-        <div
-          onMouseEnter={() => setPhotoHovered(true)}
-          onMouseLeave={() => setPhotoHovered(false)}
-          style={{
-            position: "absolute",
-            top: "calc(100% + 0.75rem)",
-            left: 0,
-            width: photoHovered ? "160px" : "0px",
-            height: photoHovered ? "200px" : "0px",
-            opacity: photoHovered ? 1 : 0,
-            overflow: "hidden",
-            border: photoHovered ? "1px solid var(--border)" : "none",
-            background: "#0a0a0a",
-            transition: "width 0.25s ease, height 0.25s ease, opacity 0.2s ease",
-            pointerEvents: photoHovered ? "auto" : "none",
-          }}
-        >
-          <Image src="/ada.jpeg" alt="Ada Yıldız" width={160} height={200}
-            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        {/* AY + hover photo */}
+        <div style={{ position: "relative" }} onClick={(e) => e.stopPropagation()}>
+          <a
+            href="#home"
+            style={{ color: "var(--text)", fontSize: "0.875rem", letterSpacing: "0.05em", textDecoration: "none", display: "block" }}
+            onMouseEnter={() => setPhotoHovered(true)}
+            onMouseLeave={() => setPhotoHovered(false)}
+          >
+            AY
+          </a>
+          <div
+            onMouseEnter={() => setPhotoHovered(true)}
+            onMouseLeave={() => setPhotoHovered(false)}
+            style={{
+              position: "absolute", top: "calc(100% + 0.75rem)", left: 0,
+              width: photoHovered ? "160px" : "0px",
+              height: photoHovered ? "200px" : "0px",
+              opacity: photoHovered ? 1 : 0,
+              overflow: "hidden",
+              border: photoHovered ? "1px solid var(--border)" : "none",
+              background: "#0a0a0a",
+              transition: "width 0.25s ease, height 0.25s ease, opacity 0.2s ease",
+              pointerEvents: photoHovered ? "auto" : "none",
+            }}
+          >
+            <Image src="/ada.jpeg" alt="Ada Yıldız" width={160} height={200}
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          </div>
         </div>
-      </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
-        {/* page links */}
-        {links.map(({ label, href }) => (
-          <a
-            key={href}
-            href={href}
-            style={{ fontSize: "0.75rem", letterSpacing: "0.1em", textDecoration: "none", color: "var(--dim)", transition: "color 0.2s ease" }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--dim)")}
+        {/* desktop nav */}
+        {!isMobile && (
+          <div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
+            {links.map(({ label, href }) => (
+              <a key={href} href={href}
+                style={{ fontSize: "0.75rem", letterSpacing: "0.1em", textDecoration: "none", color: "var(--dim)", transition: "color 0.2s ease" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--dim)")}
+              >{label}</a>
+            ))}
+            <span style={{ width: "1px", height: "14px", background: "var(--border)" }} />
+            {socials.map(({ href, label, icon }) => (
+              <a key={label} href={href}
+                target={href.startsWith("mailto") ? undefined : "_blank"}
+                rel="noopener noreferrer" aria-label={label}
+                style={{ color: "var(--dim)", display: "flex", alignItems: "center", transition: "color 0.2s ease" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--amber)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--dim)")}
+              >{icon}</a>
+            ))}
+          </div>
+        )}
+
+        {/* hamburger */}
+        {isMobile && (
+          <button
+            onClick={() => setMenuOpen((v) => !v)}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "var(--dim)", display: "flex", flexDirection: "column", gap: "5px" }}
+            aria-label="menu"
           >
-            {label}
-          </a>
-        ))}
+            <span style={{ display: "block", width: "20px", height: "1px", background: menuOpen ? "var(--amber)" : "var(--dim)", transition: "background 0.2s", transform: menuOpen ? "rotate(45deg) translate(4px, 4px)" : "none" }} />
+            <span style={{ display: "block", width: "20px", height: "1px", background: menuOpen ? "transparent" : "var(--dim)", transition: "background 0.2s" }} />
+            <span style={{ display: "block", width: "20px", height: "1px", background: menuOpen ? "var(--amber)" : "var(--dim)", transition: "background 0.2s", transform: menuOpen ? "rotate(-45deg) translate(4px, -4px)" : "none" }} />
+          </button>
+        )}
+      </nav>
 
-        {/* divider */}
-        <span style={{ width: "1px", height: "14px", background: "var(--border)" }} />
-
-        {/* social icons */}
-        {socials.map(({ href, label, icon }) => (
-          <a
-            key={label}
-            href={href}
-            target={href.startsWith("mailto") ? undefined : "_blank"}
-            rel="noopener noreferrer"
-            aria-label={label}
-            style={{ color: "var(--dim)", display: "flex", alignItems: "center", transition: "color 0.2s ease" }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--amber)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--dim)")}
-          >
-            {icon}
-          </a>
-        ))}
-      </div>
-    </nav>
+      {/* mobile menu dropdown */}
+      {isMobile && (
+        <div style={{
+          position: "fixed", top: "4rem", left: 0, right: 0, zIndex: 49,
+          background: "rgba(10,10,10,0.97)",
+          borderBottom: "1px solid var(--border)",
+          overflow: "hidden",
+          maxHeight: menuOpen ? "300px" : "0px",
+          transition: "max-height 0.3s ease",
+        }}>
+          <div style={{ padding: "1.5rem 2rem", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+            {links.map(({ label, href }) => (
+              <a key={href} href={href}
+                onClick={() => setMenuOpen(false)}
+                style={{ fontSize: "0.85rem", letterSpacing: "0.1em", textDecoration: "none", color: "var(--dim)" }}
+              >{label}</a>
+            ))}
+            <div style={{ display: "flex", gap: "1.5rem", paddingTop: "0.5rem", borderTop: "1px solid var(--border)" }}>
+              {socials.map(({ href, label, icon }) => (
+                <a key={label} href={href}
+                  target={href.startsWith("mailto") ? undefined : "_blank"}
+                  rel="noopener noreferrer" aria-label={label}
+                  style={{ color: "var(--dim)", display: "flex", alignItems: "center" }}
+                >{icon}</a>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
